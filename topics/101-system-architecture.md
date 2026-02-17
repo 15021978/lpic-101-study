@@ -82,7 +82,8 @@ list-unit-files shows what exists on the system.
 
 ---
 
-### Units
+## Units
+
 What are systemd “units”?
 
 Units are not processes.
@@ -106,3 +107,11 @@ Correct mental model
 unit file (.service/.target) → systemd reads the unit → systemd starts it → process(es) run
 
 “Units are definitions managed by systemd; processes are running instances.”
+
+---
+
+##Targets (System States)
+
+	•	multi-user.target → multi-user, text-based environment (similar to runlevel 3)
+	•	graphical.target → graphical environment (similar to runlevel 5)
+
