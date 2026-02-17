@@ -80,38 +80,5 @@ Exam tip:
 list-units shows what is in use now.
 list-unit-files shows what exists on the system.
 
----
 
-## Units
-
-What are systemd “units”?
-
-Units are not processes.
-A unit is a systemd configuration object that defines:
-	•	what to start
-	•	when to start
-	•	how to start
-	•	how to stop/manage it
-
-A unit may create one or more processes, but the unit itself is not a process.
-
-Common unit types
-	•	service → defines a service (e.g., ssh.service)
-	•	target → logical grouping of units (e.g., multi-user.target)
-	•	mount → defines a mount point
-	•	socket → defines a socket
-	•	timer → defines a scheduled task
-
-Correct mental model
-
-unit file (.service/.target) → systemd reads the unit → systemd starts it → process(es) run
-
-“Units are definitions managed by systemd; processes are running instances.”
-
----
-
-##Targets (System States)
-
-	•	multi-user.target → multi-user, text-based environment (similar to runlevel 3)
-	•	graphical.target → graphical environment (similar to runlevel 5)
 
