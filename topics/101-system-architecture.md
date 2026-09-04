@@ -1,109 +1,63 @@
-# Domain 101 — System Architecture
+# System Architecture
 
-Notes for LPIC-101 (System Architecture), focusing on boot process and init systems.
+Short notes on the Linux boot process and init systems.
 
----
+## Boot sequence
 
-## Boot Process (Correct Order)
-
-**BIOS/UEFI → GRUB → Kernel → init/systemd**
-
-This order is commonly tested.
-
-### BIOS (legacy firmware)
-- Legacy firmware (older systems)
-- Typical Linux filesystems used in `/boot`: **ext2/ext3/ext4** (common in many setups)
-
-### UEFI (modern firmware)
-- Modern firmware
-- Uses the **EFI System Partition (ESP)**, commonly mounted at:
-  - `/boot/efi`
-- Typical filesystem for ESP: **FAT32 (vfat)**
-
-### GRUB (bootloader)
-- Bootloader responsible for loading the Linux kernel.
-
-Important files:
-- `/etc/default/grub` → main configuration file you edit
-- `/boot/grub/grub.cfg` → auto-generated configuration (**do not edit manually**)
-
-Generate/rebuild `grub.cfg` (depends on distro):
-- Debian/Ubuntu:
-  - `sudo update-grub`
-- Generic approach:
-  - `sudo grub-mkconfig -o /boot/grub/grub.cfg`
-
-### Kernel
-- The core of the operating system.
-
----
-
-## Init Systems
-
-### systemd (modern init system)
-- The most common modern init system.
-- Runs as **PID 1**.
-
-### SysVinit (legacy init system)
-- Older init system (conceptual knowledge is useful for the exam).
-
----
-
-## systemd Basics (Commands)
-
-Start a service now:
-```bash
-sudo systemctl start <service>
+```text
+BIOS or UEFI -> bootloader -> kernel and initramfs -> init system (PID 1)
 ```
 
-Enable a service at boot:
+- **BIOS/UEFI** performs the initial hardware setup and selects a boot device.
+- **GRUB** can present a menu and load the selected kernel and initramfs.
+- **The kernel** detects hardware and mounts the initial root environment.
+- **The init system** starts userspace services. On most current distributions this is systemd.
+
+The EFI System Partition is normally FAT-formatted and often mounted at `/boot/efi`. It is different from the Linux root filesystem.
+
+## GRUB files
+
+On Debian and Ubuntu, `/etc/default/grub` contains settings that can be edited. `/boot/grub/grub.cfg` is generated and should not normally be edited by hand.
+
 ```bash
-sudo systemctl enable <service>
+sudo update-grub
 ```
 
-Switch to another target immediately:
+On distributions that use the generic GRUB command, the output path must match that distribution:
+
 ```bash
-sudo systemctl isolate <target>
+sudo grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-Set the default target:
+**Common mistake:** changing `/etc/default/grub` but forgetting to regenerate the GRUB configuration.
+
+## Inspecting boot information
+
 ```bash
-sudo systemctl set-default <target>
+lsblk -f
+findmnt /boot
+dmesg --level=err,warn
+journalctl -b
 ```
 
-View the current default target:
+- `lsblk -f` shows block devices, filesystems and mount points.
+- `findmnt /boot` checks whether `/boot` is a separate mount.
+- `dmesg` shows kernel messages; access may require additional permissions.
+- `journalctl -b` limits the journal to the current boot.
+
+## systemd basics
+
+`systemd` runs as PID 1 on a systemd-based distribution. A unit can be active now without being enabled for the next boot, and the reverse is also possible.
+
 ```bash
+systemctl status ssh
+systemctl is-active ssh
+systemctl is-enabled ssh
 systemctl get-default
+systemctl list-units --type=service
+systemctl list-unit-files --type=service
 ```
 
-List active units (what is running/loaded now):
-```bash
-systemctl list-units
-```
+`list-units` shows units currently loaded in memory. `list-unit-files` shows installed unit files and their enablement state.
 
-List unit files installed on the system (what exists on disk):
-```bash
-systemctl list-unit-files
-```
-
-List targets (installed unit files of type target):
-```bash
-systemctl list-unit-files --type=target
-```
-
----
-
-Exam tip:
-
-Show what is in use now
-```bash
-systemctl list-units
-```
-
-Shows what exists on the system.
-```bash
-systemctl list-unit-files
-```
-
-
-
+**Common mistake:** treating `enabled` as if it meant `running`. Use both `is-enabled` and `is-active` when that distinction matters.
